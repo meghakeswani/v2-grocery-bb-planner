@@ -146,6 +146,25 @@ export default function App() {
     );
   };
 
+  // State to track completed/eaten meals across the app: { [`${day}-${recipeName}`]: boolean }
+  const [completedMeals, setCompletedMeals] = useState({});
+
+  const handleSwapCartItem = (oldItemId, newIngredient) => {
+    setCartItems((prev) =>
+      prev.map((item) => {
+        if (item.id === oldItemId) {
+          return {
+            ...newIngredient,
+            count: item.count,
+            dayAssigned: item.dayAssigned,
+            recipeName: item.recipeName
+          };
+        }
+        return item;
+      })
+    );
+  };
+
   const handleRemoveItem = (itemId) => {
     setCartItems((prev) => prev.filter((item) => item.id !== itemId));
   };
@@ -268,6 +287,7 @@ export default function App() {
               onUpdateQuantity={handleUpdateQuantity}
               onRemoveItem={handleRemoveItem}
               onClearCart={handleClearCart}
+              onSwapCartItem={handleSwapCartItem}
               totalCartValue={cartTotalValue}
               totalCartProtein={cartTotalProtein}
               totalSavings={totalSavings}
@@ -283,7 +303,14 @@ export default function App() {
             budgetTarget={budget}
             cartTotalProtein={cartTotalProtein}
             proteinTarget={minProtein * days}
+            minProteinPerDay={minProtein}
             totalSavings={totalSavings}
+            cartItems={cartItems}
+            recipes={recipes}
+            days={days}
+            completedMeals={completedMeals}
+            setCompletedMeals={setCompletedMeals}
+            onNavigateToShop={() => setActiveTab('Shop')}
           />
         )}
 

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ShoppingBag, Trash2, ChevronDown, ChevronUp, CheckCircle2, Sparkles, RefreshCw } from 'lucide-react';
+import { ShoppingBag, Trash2, ChevronDown, ChevronUp, CheckCircle2, Sparkles, RefreshCw, Shuffle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export default function CartSidebar({
@@ -9,6 +9,7 @@ export default function CartSidebar({
   onUpdateQuantity,
   onRemoveItem,
   onClearCart,
+  onSwapCartItem,
   totalCartValue,
   totalCartProtein,
   totalSavings
@@ -20,6 +21,9 @@ export default function CartSidebar({
   
   // Track collapsed recipe groups: { [recipeName]: boolean }
   const [collapsedMap, setCollapsedMap] = useState({});
+
+  // Track target item to swap with alternate brand/size: null | ingredientObject
+  const [swapTargetItem, setSwapTargetItem] = useState(null);
 
   // Group cart items by recipe
   const groupedCartItems = useMemo(() => {
@@ -46,6 +50,43 @@ export default function CartSidebar({
       totalProtein: 20,
       savingsText: '1.5x saved for 3 times'
     };
+  };
+
+  // Find alternate items for a target ingredient
+  const getAlternatesForTarget = (targetItem) => {
+    if (!targetItem) return [];
+    const recipe = recipes.find(
+      (r) => r.name.toLowerCase() === (targetItem.recipeName || '').toLowerCase()
+    );
+    const recipeIngs = recipe?.ingredients || [];
+    
+    // Look for ingredients in the same recipe with same subCategory or category
+    let alts = recipeIngs.filter(
+      (ing) => ing.id !== targetItem.id && (
+        (ing.subCategory && ing.subCategory === targetItem.subCategory) ||
+        (ing.category && ing.category === targetItem.category)
+      )
+    );
+
+    // If fewer than 2 in same recipe, search across all recipes for same subcategory
+    if (alts.length < 2) {
+      recipes.forEach((r) => {
+        r.ingredients.forEach((ing) => {
+          if (ing.id !== targetItem.id && ing.subCategory && ing.subCategory === targetItem.subCategory) {
+            if (!alts.some((a) => a.id === ing.id || a.productName === ing.productName)) {
+              alts.push(ing);
+            }
+          }
+        });
+      });
+    }
+
+    // If still empty, add other ingredients from the same recipe
+    if (alts.length === 0) {
+      alts = recipeIngs.filter((ing) => ing.id !== targetItem.id);
+    }
+
+    return alts.slice(0, 8);
   };
 
   const toggleCollapse = (recipeName) => {
@@ -239,7 +280,7 @@ export default function CartSidebar({
                       <span className="col-span-2 text-right">Price</span>
                     </div>
 
-                    {/* Simplified Ingredients Rows */}
+                    {/* Simplified Ingredients Rows with Shuffle Swap Button */}
                     <div className="space-y-1.5">
                       {items.map((item, idx) => {
                         const packPrice = (item.packetDiscountPrice ?? item.discountPrice ?? 0) * item.count;
@@ -252,7 +293,7 @@ export default function CartSidebar({
                             className="text-xs border-b border-gray-50 pb-1.5 last:border-0 last:pb-0 space-y-0.5"
                           >
                             <div className="grid grid-cols-12 gap-1 items-center">
-                              {/* 1. Item Name & ALT badge (no green dot) */}
+                              {/* 1. Item Name & Shuffle Button (replacing ALT) */}
                               <div className="col-span-6 flex items-center space-x-1 min-w-0 pr-1">
                                 <span
                                   className="font-semibold text-gray-900 truncate text-[11px]"
@@ -260,12 +301,14 @@ export default function CartSidebar({
                                 >
                                   {item.productName}
                                 </span>
-                                <span
-                                  className="text-[8px] font-bold px-1 py-0.2 bg-gray-100 text-gray-500 rounded shrink-0 cursor-pointer hover:bg-gray-200"
-                                  title="Alternate pack"
+                                <button
+                                  type="button"
+                                  onClick={() => setSwapTargetItem(item)}
+                                  className="p-1 text-gray-400 hover:text-[#689f38] hover:bg-emerald-50 rounded-md transition-colors shrink-0 cursor-pointer"
+                                  title="Swap with alternative brand / size"
                                 >
-                                  ALT
-                                </span>
+                                  <Shuffle className="w-3 h-3 text-[#84c225]" />
+                                </button>
                               </div>
 
                               {/* 2. Usage badge */}
@@ -375,6 +418,102 @@ export default function CartSidebar({
             <span>BUY ITEMS (₹{totalCartValue})</span>
           </button>
 
+        </div>
+      )}
+
+      {/* 4. Alternate Items Swap Popup Modal */}
+      {swapTargetItem && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-2xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl max-w-md w-full p-5 border border-gray-100 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+              <div className="flex items-center space-x-2">
+                <Shuffle className="w-4 h-4 text-[#84c225]" />
+                <h3 className="text-sm font-bold text-gray-900">Alternate Ingredients</h3>
+              </div>
+              <button
+                onClick={() => setSwapTargetItem(null)}
+                className="text-gray-400 hover:text-gray-600 text-sm font-bold p-1 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Current Item Summary */}
+            <div className="bg-gray-50 p-2.5 rounded-lg border border-gray-200 text-xs flex items-center justify-between">
+              <div className="min-w-0 pr-2">
+                <span className="text-[10px] text-gray-400 font-medium block">Current in Cart:</span>
+                <span className="font-bold text-gray-800 truncate block">{swapTargetItem.productName}</span>
+                <span className="text-[10.5px] text-gray-500">{swapTargetItem.quantity} • {swapTargetItem.usagesText || 'x5 usages'}</span>
+              </div>
+              <span className="font-extrabold text-gray-900 text-sm shrink-0">
+                ₹{swapTargetItem.packetDiscountPrice ?? swapTargetItem.discountPrice}
+              </span>
+            </div>
+
+            {/* Available Alternates List */}
+            <div className="space-y-2">
+              <span className="text-[11px] font-bold text-gray-700 block">
+                Select an alternative brand or variant:
+              </span>
+
+              <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
+                {getAlternatesForTarget(swapTargetItem).length === 0 ? (
+                  <p className="text-xs text-gray-400 py-4 text-center">No other alternates found for this category.</p>
+                ) : (
+                  getAlternatesForTarget(swapTargetItem).map((alt) => (
+                    <div
+                      key={alt.id}
+                      className="p-2.5 rounded-xl border border-gray-200 hover:border-[#84c225] bg-white hover:bg-emerald-50/20 transition-all flex items-center justify-between gap-2.5"
+                    >
+                      <div className="flex items-center space-x-2.5 min-w-0">
+                        <img
+                          src={alt.imageUrl}
+                          alt={alt.productName}
+                          className="w-10 h-10 rounded-lg object-cover bg-gray-50 border border-gray-200 shrink-0"
+                          onError={(e) => {
+                            e.target.src = 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=100';
+                          }}
+                        />
+                        <div className="min-w-0">
+                          <h4 className="font-bold text-gray-900 text-xs truncate" title={alt.productName}>
+                            {alt.productName}
+                          </h4>
+                          <div className="flex items-center space-x-1.5 text-[10px] text-gray-500 mt-0.5">
+                            <span className="font-semibold text-gray-700">{alt.quantity || '1 kg'}</span>
+                            <span>•</span>
+                            <span className="bg-emerald-50 text-[#689f38] px-1 py-0.2 rounded font-bold border border-emerald-100">
+                              {alt.usagesText || `x${alt.usages || 5}`}
+                            </span>
+                            {alt.brand && <span>• {alt.brand}</span>}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-2 shrink-0">
+                        <div className="text-right">
+                          <span className="font-extrabold text-gray-900 text-xs block">
+                            ₹{alt.packetDiscountPrice ?? alt.discountPrice}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (onSwapCartItem) {
+                              onSwapCartItem(swapTargetItem.id, alt);
+                            }
+                            setSwapTargetItem(null);
+                          }}
+                          className="px-2.5 py-1 bg-[#84c225] hover:bg-[#689f38] text-white font-bold rounded-lg text-xs transition-colors cursor-pointer"
+                        >
+                          Swap
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

@@ -189,7 +189,10 @@ export default function RecipeBoard({
     }
   };
 
-  // Toggle expand on card click
+  // Track hovered slot for automatic on-hover customize ingredients view
+  const [hoveredSlot, setHoveredSlot] = useState(null);
+
+  // Toggle expand on card click (optional manual pin)
   const toggleSlotExpand = (slotKey) => {
     setExpandedSlots((prev) => ({
       ...prev,
@@ -232,7 +235,7 @@ export default function RecipeBoard({
           <p className="text-[11px] text-gray-400">
             {noResults
               ? 'No meals match your filters. Try increasing budget or lowering protein target.'
-              : `Use the shuffle button to swap any recipe or click customize to adjust ingredients.`}
+              : `Hover over any recipe card to view & customize ingredients, or click shuffle to swap meals.`}
           </p>
         </div>
         <span className="text-[11px] font-semibold text-gray-600 bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
@@ -257,11 +260,11 @@ export default function RecipeBoard({
                   </span>
                 </div>
                 <span className="text-[10px] text-gray-400 font-medium">
-                  Click 🔀 to swap any meal
+                  Hover to customize • Click 🔀 to swap
                 </span>
               </div>
 
-              {/* Stable 3-Column Grid without jumping or dynamic image scaling */}
+              {/* Stable 3-Column Grid */}
               {noResults ? (
                 <div className="py-6 text-center bg-gray-50 rounded-lg border border-dashed border-gray-200 text-[11px] text-gray-400">
                   No recipes match your current budget & protein filters. Adjust the sliders.
@@ -273,7 +276,9 @@ export default function RecipeBoard({
                     const recipe = getRecipeForSlot(dayIndex, mealIdx);
                     if (!recipe) return null;
 
-                    const isExpanded = !!expandedSlots[slotKey];
+                    // Show customize ingredients on hover OR manual click
+                    const isHovered = hoveredSlot === slotKey;
+                    const isExpanded = isHovered || !!expandedSlots[slotKey];
                     const isShuffling = shufflingSlot === slotKey;
                     const pantryMatches = getPantryMatches(recipe);
                     const isMealInCart = cartItems.some(
@@ -299,12 +304,14 @@ export default function RecipeBoard({
                     return (
                       <div
                         key={slotKey}
-                        className={`bg-white rounded-xl border overflow-hidden transition-all duration-200 flex flex-col justify-between shadow-2xs hover:border-gray-300 relative ${
-                          isMealInCart ? 'ring-2 ring-[#84c225] border-[#84c225]' : 'border-gray-200'
-                        }`}
+                        onMouseEnter={() => setHoveredSlot(slotKey)}
+                        onMouseLeave={() => setHoveredSlot(null)}
+                        className={`bg-white rounded-xl border transition-all duration-200 flex flex-col justify-between relative shadow-2xs ${
+                          isHovered ? 'shadow-md border-gray-300 ring-1 ring-gray-200' : 'border-gray-200'
+                        } ${isMealInCart ? 'ring-2 ring-[#84c225] border-[#84c225]' : ''}`}
                       >
-                        {/* 1. Thumbnail Image with Stable Fixed Height + Floating Shuffle Button */}
-                        <div className="relative h-36 w-full bg-gray-50 overflow-hidden">
+                        {/* 1. Fixed-Height Thumbnail Image (Never jumps or resizes on hover) */}
+                        <div className="relative h-32 w-full bg-gray-50 overflow-hidden rounded-t-xl shrink-0">
                           <img
                             src={recipe.image}
                             alt={recipe.name}
@@ -320,7 +327,7 @@ export default function RecipeBoard({
                             <span>{recipe.cookTime} min</span>
                           </div>
 
-                          {/* Shuffle Button (Floating outside content on top right) */}
+                          {/* Shuffle Button (Floating on top-right) */}
                           <button
                             type="button"
                             onClick={(e) => handleShuffleSlot(dayIndex, mealIdx, e)}
@@ -355,7 +362,7 @@ export default function RecipeBoard({
                             {/* Pantry match indicator */}
                             {pantryMatches.length > 0 && (
                               <div className="mt-1.5 flex items-center space-x-1 text-[9.5px] text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
-                                <Leaf className="w-3 h-3 text-[#84c225] shrink-0" />
+                                <Leaf className="w-3 h-3 text-[#84c225]" />
                                 <span>Pantry ingredient available</span>
                               </div>
                             )}
@@ -364,26 +371,17 @@ export default function RecipeBoard({
                           {/* Cost Breakdown */}
                           <div className="pt-1.5 border-t border-gray-100 flex items-center justify-between text-[10.5px]">
                             <div>
-                              <span className="text-gray-400 block text-[9.5px]">Portion Cost</span>
+                              <span className="text-gray-400 block text-[9px]">Portion Cost</span>
                               <span className="font-bold text-gray-800">₹{selectedRecipeCost}</span>
                             </div>
                             <div className="text-right">
-                              <span className="text-gray-400 block text-[9.5px]">Store Pack (x5)</span>
+                              <span className="text-gray-400 block text-[9px]">Store Pack (x5)</span>
                               <span className="font-extrabold text-[#689f38] text-xs">₹{selectedPacketCost}</span>
                             </div>
                           </div>
 
-                          {/* Actions: Customize Toggle + Add to Cart */}
+                          {/* Customize Status Indicator & Add to Cart Button */}
                           <div className="space-y-1.5 pt-1">
-                            <button
-                              type="button"
-                              onClick={() => toggleSlotExpand(slotKey)}
-                              className="w-full py-1 text-[10px] font-semibold text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 rounded-md border border-gray-200 flex items-center justify-center space-x-1 cursor-pointer transition-colors"
-                            >
-                              <span>{isExpanded ? 'Hide Ingredients' : 'Customize Ingredients'}</span>
-                              {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                            </button>
-
                             <button
                               type="button"
                               onClick={(e) => handleMealCartClick(recipe, dayIndex, e)}
@@ -399,12 +397,12 @@ export default function RecipeBoard({
                           </div>
                         </div>
 
-                        {/* 3. Smooth Collapsible Ingredients Checklist Drawer */}
+                        {/* 3. Customize Ingredients Section on Hover */}
                         {isExpanded && (
-                          <div className="p-3 bg-gray-50/80 border-t border-gray-200 space-y-2 text-xs animate-in fade-in duration-200">
+                          <div className="p-3 bg-gray-50/95 border-t border-gray-200 space-y-2 text-xs transition-all duration-200">
                             <div className="flex items-center justify-between">
                               <span className="font-bold text-gray-900 text-[11px]">
-                                Ingredients ({selectedIngs.length}/{allIngs.length})
+                                Customize Ingredients ({selectedIngs.length}/{allIngs.length})
                               </span>
 
                               <button
