@@ -191,19 +191,27 @@ const rawData = [
   { ProductName: "Paneer - Fresh", Brand: "Fresho", Price: 350, DiscountPrice: 299, Image_Url: "https://www.bigbasket.com/media/uploads/p/l/40072493_15-fresho-paneer-fresh.jpg", Quantity: "200 g", Category: "Dairy", SubCategory: "Paneer", Absolute_Url: "https://www.bigbasket.com/pd/40072493/fresho-paneer-fresh-200-g/", RecipeSuggestion: "Saag/Leafy Veg Curry", Protein: 5, Carbs: 10, Fat: 5, Fiber: 5 },
 ];
 
+const BASE = import.meta.env.BASE_URL || '/';
+const getAssetUrl = (path) => {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  const clean = path.startsWith('/') ? path.slice(1) : path;
+  return `${BASE}${clean}`;
+};
+
 // Map recipe names directly to local dish image assets in public folder
 export const recipeImages = {
-  "Dry Fruit Ladoo": "/dry fruit laddoo.png",
-  "Saag/Leafy Veg Curry": "/saag.png",
-  "Mixed Veg Curry": "/mixed veg curry.png",
-  "Dal Tadka": "/dal tadka.png",
-  "Roti / Paratha": "/roti paratha.png",
-  "Poha": "/poha.png",
-  "Vegetable Biryani": "/vegetable biryani.png",
-  "Chana Masala": "/chana masala.png",
-  "Vegetable Pulao": "/vegetable pulao.png",
-  "Idli / Dosa": "/idli dosa.png",
-  "Rajma Curry": "/rajma curry.png",
+  "Dry Fruit Ladoo": getAssetUrl("dry fruit laddoo.png"),
+  "Saag/Leafy Veg Curry": getAssetUrl("saag.png"),
+  "Mixed Veg Curry": getAssetUrl("mixed veg curry.png"),
+  "Dal Tadka": getAssetUrl("dal tadka.png"),
+  "Roti / Paratha": getAssetUrl("roti paratha.png"),
+  "Poha": getAssetUrl("poha.png"),
+  "Vegetable Biryani": getAssetUrl("vegetable biryani.png"),
+  "Chana Masala": getAssetUrl("chana masala.png"),
+  "Vegetable Pulao": getAssetUrl("vegetable pulao.png"),
+  "Idli / Dosa": getAssetUrl("idli dosa.png"),
+  "Rajma Curry": getAssetUrl("rajma curry.png"),
 };
 
 // Pre-compute recipes grouped data

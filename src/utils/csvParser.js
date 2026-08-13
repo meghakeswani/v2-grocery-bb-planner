@@ -1,18 +1,26 @@
 import Papa from 'papaparse';
 
+const BASE = import.meta.env.BASE_URL || '/';
+const getAssetUrl = (path) => {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  const clean = path.startsWith('/') ? path.slice(1) : path;
+  return `${BASE}${clean}`;
+};
+
 // Map recipe names to local image assets
 const RECIPE_IMAGE_MAP = {
-  'Dry Fruit Ladoo': '/images/dry fruit laddoo.png',
-  'Saag/Leafy Veg Curry': '/images/saag.png',
-  'Mixed Veg Curry': '/images/mixed veg curry.png',
-  'Dal Tadka': '/images/dal tadka.png',
-  'Roti / Paratha': '/images/roti paratha.png',
-  'Poha': '/images/poha.png',
-  'Vegetable Biryani': '/images/vegetable biryani.png',
-  'Chana Masala': '/images/chana masala.png',
-  'Vegetable Pulao': '/images/vegetable pulao.png',
-  'Idli / Dosa': '/images/idli dosa.png',
-  'Rajma Curry': '/images/rajma curry.png'
+  'Dry Fruit Ladoo': getAssetUrl('images/dry fruit laddoo.png'),
+  'Saag/Leafy Veg Curry': getAssetUrl('images/saag.png'),
+  'Mixed Veg Curry': getAssetUrl('images/mixed veg curry.png'),
+  'Dal Tadka': getAssetUrl('images/dal tadka.png'),
+  'Roti / Paratha': getAssetUrl('images/roti paratha.png'),
+  'Poha': getAssetUrl('images/poha.png'),
+  'Vegetable Biryani': getAssetUrl('images/vegetable biryani.png'),
+  'Chana Masala': getAssetUrl('images/chana masala.png'),
+  'Vegetable Pulao': getAssetUrl('images/vegetable pulao.png'),
+  'Idli / Dosa': getAssetUrl('images/idli dosa.png'),
+  'Rajma Curry': getAssetUrl('images/rajma curry.png')
 };
 
 const RECIPE_COOK_TIME = {
@@ -34,7 +42,7 @@ const GOOGLE_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSyHYsl5
 export async function fetchAndParseRecipes() {
   let csvText = '';
   try {
-    const res = await fetch('/dataset.csv');
+    const res = await fetch(getAssetUrl('dataset.csv'));
     if (res.ok) {
       csvText = await res.text();
     }

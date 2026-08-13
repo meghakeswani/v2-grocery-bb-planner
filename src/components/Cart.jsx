@@ -65,9 +65,11 @@ export default function Cart({ items, totals, onRemoveItem, onClearCart, selecte
                       <img
                         src={item.Image_Url}
                         alt={item.ProductName}
+                        referrerPolicy="no-referrer"
                         className="w-full h-full object-cover"
                         loading="lazy"
                         onError={(e) => {
+                          e.target.onerror = null;
                           e.target.style.display = 'none';
                         }}
                       />

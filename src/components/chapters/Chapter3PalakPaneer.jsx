@@ -65,7 +65,7 @@ export default function Chapter3PalakPaneer({ activeStep }) {
             {/* Dish Photo */}
             <div className="md:col-span-5 flex flex-col items-center">
               <div className="relative w-full max-w-xs rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 p-3">
-                <img src="/saag.png" alt="Palak Paneer" className="w-full h-48 object-cover rounded-xl" />
+                <img src={`${import.meta.env.BASE_URL || '/'}saag.png`.replace('//', '/')} alt="Palak Paneer" className="w-full h-48 object-cover rounded-xl" />
                 <div className="mt-3 flex items-center justify-between">
                   <div>
                     <h3 className="text-lg font-bold text-white">Palak Paneer</h3>

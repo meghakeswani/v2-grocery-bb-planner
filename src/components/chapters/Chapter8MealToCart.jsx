@@ -11,7 +11,7 @@ export default function Chapter8MealToCart({ activeStep }) {
     time: '30 min',
     protein: '24g protein',
     price: 120,
-    image: '/saag.png'
+    image: `${import.meta.env.BASE_URL || '/'}saag.png`.replace('//', '/')
   };
 
   const ingredients = [

@@ -68,8 +68,10 @@ export default function CartSidebar({
                 <img
                   src={item.imageUrl}
                   alt={item.productName}
+                  referrerPolicy="no-referrer"
                   className="w-9 h-9 rounded object-cover bg-white border border-gray-200 flex-shrink-0"
                   onError={(e) => {
+                    e.target.onerror = null;
                     e.target.src = 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=100';
                   }}
                 />
