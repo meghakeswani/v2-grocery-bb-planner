@@ -1,18 +1,20 @@
 import Papa from 'papaparse';
 
 // Map recipe names to local image assets
+// Use import.meta.env.BASE_URL so paths work on GitHub Pages subpath
+const BASE = import.meta.env.BASE_URL;
 const RECIPE_IMAGE_MAP = {
-  'Dry Fruit Ladoo': '/images/dry fruit laddoo.png',
-  'Saag/Leafy Veg Curry': '/images/saag.png',
-  'Mixed Veg Curry': '/images/mixed veg curry.png',
-  'Dal Tadka': '/images/dal tadka.png',
-  'Roti / Paratha': '/images/roti paratha.png',
-  'Poha': '/images/poha.png',
-  'Vegetable Biryani': '/images/vegetable biryani.png',
-  'Chana Masala': '/images/chana masala.png',
-  'Vegetable Pulao': '/images/vegetable pulao.png',
-  'Idli / Dosa': '/images/idli dosa.png',
-  'Rajma Curry': '/images/rajma curry.png'
+  'Dry Fruit Ladoo': `${BASE}images/dry fruit laddoo.png`,
+  'Saag/Leafy Veg Curry': `${BASE}images/saag.png`,
+  'Mixed Veg Curry': `${BASE}images/mixed veg curry.png`,
+  'Dal Tadka': `${BASE}images/dal tadka.png`,
+  'Roti / Paratha': `${BASE}images/roti paratha.png`,
+  'Poha': `${BASE}images/poha.png`,
+  'Vegetable Biryani': `${BASE}images/vegetable biryani.png`,
+  'Chana Masala': `${BASE}images/chana masala.png`,
+  'Vegetable Pulao': `${BASE}images/vegetable pulao.png`,
+  'Idli / Dosa': `${BASE}images/idli dosa.png`,
+  'Rajma Curry': `${BASE}images/rajma curry.png`
 };
 
 const RECIPE_COOK_TIME = {
@@ -34,7 +36,7 @@ const GOOGLE_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSyHYsl5
 export async function fetchAndParseRecipes() {
   let csvText = '';
   try {
-    const res = await fetch('/dataset.csv');
+    const res = await fetch(`${BASE}dataset.csv`);
     if (res.ok) {
       csvText = await res.text();
     }
