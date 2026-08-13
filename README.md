@@ -1,1 +1,0 @@
-# Inxd_25_Patterns
