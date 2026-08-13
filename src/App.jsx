@@ -53,15 +53,17 @@ export default function App() {
     loadData();
   }, []);
 
-  // Compute Cart Telemetry from SELECTED meals only
+  // Compute Cart Telemetry from SELECTED meals only (Full buying packet rates for cart checkout)
   const { cartTotalValue, cartTotalProtein, totalSavings } = useMemo(() => {
     let totalVal = 0;
     let totalProt = 0;
     let origVal = 0;
 
     cartItems.forEach((item) => {
-      totalVal += item.discountPrice * item.count;
-      origVal += item.price * item.count;
+      const buyPrice = item.packetDiscountPrice ?? item.discountPrice ?? 0;
+      const originalPrice = item.packetPrice ?? item.price ?? buyPrice;
+      totalVal += buyPrice * item.count;
+      origVal += originalPrice * item.count;
       totalProt += (item.protein || 0) * item.count;
     });
 
@@ -261,6 +263,8 @@ export default function App() {
             {/* 3. Right Column (Persistent Cart Sidebar) */}
             <CartSidebar
               cartItems={cartItems}
+              recipes={recipes}
+              days={days}
               onUpdateQuantity={handleUpdateQuantity}
               onRemoveItem={handleRemoveItem}
               onClearCart={handleClearCart}

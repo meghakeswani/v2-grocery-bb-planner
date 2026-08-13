@@ -113,6 +113,30 @@ export function formatRecipeQuantity(packetQtyStr = '') {
   return '1 portion';
 }
 
+export function calculateUsages(packetQtyStr = '', recipeQtyStr = '') {
+  const pLower = packetQtyStr.toLowerCase().trim();
+  const rLower = recipeQtyStr.toLowerCase().trim();
+
+  // Extract numeric grams/ml
+  let pNum = 1000;
+  if (pLower.includes('kg')) pNum = (parseFloat(pLower) || 1) * 1000;
+  else if (pLower.includes('g')) pNum = parseFloat(pLower) || 500;
+  else if (pLower.includes('l')) pNum = (parseFloat(pLower) || 1) * 1000;
+  else if (pLower.includes('ml')) pNum = parseFloat(pLower) || 500;
+  else if (pLower.includes('pc') || pLower.includes('unit')) pNum = 1;
+
+  let rNum = 200;
+  if (rLower.includes('kg')) rNum = (parseFloat(rLower) || 0.2) * 1000;
+  else if (rLower.includes('g')) rNum = parseFloat(rLower) || 100;
+  else if (rLower.includes('l')) rNum = (parseFloat(rLower) || 0.2) * 1000;
+  else if (rLower.includes('ml')) rNum = parseFloat(rLower) || 100;
+  else if (rLower.includes('unit') || rLower.includes('portion')) rNum = 1;
+
+  if (rNum <= 0) return 3;
+  const rawRatio = Math.round(pNum / rNum);
+  return Math.min(10, Math.max(1, rawRatio || 5));
+}
+
 export function processCSVData(csvText) {
   const parsed = Papa.parse(csvText, {
     header: true,
@@ -148,22 +172,25 @@ export function processCSVData(csvText) {
 
     const packetQty = row['Quantity'] || '1 kg';
     const recipeQty = formatRecipeQuantity(packetQty);
+    const usages = calculateUsages(packetQty, recipeQty);
 
     const ingredient = {
       id: `ing-${index}-${(row['ProductName'] || '').substring(0, 12).replace(/\s+/g, '-')}`,
       productName: row['ProductName'] || 'Fresh Ingredient',
       brand: row['Brand'] || '',
-      // Recipe portion prices (rate required for recipe only)
+      // Single recipe portion prices
       price: price,
       discountPrice: discountPrice,
       recipePrice: price,
       recipeDiscountPrice: discountPrice,
-      // Full buying packet prices
-      packetPrice: rawPrice,
-      packetDiscountPrice: rawDiscountPrice,
-      // Quantities
-      quantity: packetQty, // Store buying packet quantity (e.g. 1 kg)
-      recipeQuantity: recipeQty, // Specific quantity needed for this recipe (e.g. 200g)
+      // Full buying store packet prices (as requested for the Cart)
+      packetPrice: Math.round(rawPrice),
+      packetDiscountPrice: Math.round(rawDiscountPrice),
+      // Quantities & Usages
+      quantity: packetQty, // Store buying packet quantity (e.g. 50g, 500g, 1 kg)
+      recipeQuantity: recipeQty, // Specific quantity needed for 1 recipe (e.g. 200g, 50g)
+      usages: usages, // How many times / recipes this packet serves (e.g. 5)
+      usagesText: `x${usages}`,
       imageUrl: row['Image_Url'],
       category: row['Category'] || 'Grocery',
       subCategory: row['SubCategory'] || '',
@@ -183,15 +210,19 @@ export function processCSVData(csvText) {
   const recipes = Object.values(recipeMap).map(r => {
     const essentialItems = getTopEssentialIngredients(r.ingredients, 5);
 
-    // Aggregate from the 5 essential items — these are the ACTUAL CSV prices
+    // Aggregate from the 5 essential items — single portion vs full packet
     let essentialPrice = 0;
     let essentialDiscountPrice = 0;
     let essentialProtein = 0;
+    let packetPriceSum = 0;
+    let packetDiscountPriceSum = 0;
 
     essentialItems.forEach(item => {
       essentialPrice += item.price;
       essentialDiscountPrice += item.discountPrice;
       essentialProtein += item.protein;
+      packetPriceSum += item.packetPrice;
+      packetDiscountPriceSum += item.packetDiscountPrice;
     });
 
     seedCounter += 7;
@@ -202,6 +233,10 @@ export function processCSVData(csvText) {
       essentialIngredients: essentialItems,
       totalPrice: Math.round(essentialPrice * 100) / 100,
       totalDiscountPrice: Math.round(essentialDiscountPrice * 100) / 100,
+      totalPacketPrice: Math.round(packetPriceSum),
+      totalPacketDiscountPrice: Math.round(packetDiscountPriceSum),
+      packetSavings: Math.max(0, Math.round(packetPriceSum - packetDiscountPriceSum)),
+      savingsText: '1.5x saved for 3 times',
       savings: Math.round((essentialPrice - essentialDiscountPrice) * 100) / 100,
       discountPercent: essentialPrice > 0 ? Math.round(((essentialPrice - essentialDiscountPrice) / essentialPrice) * 100) : 0,
       totalProtein: Math.round(essentialProtein),
