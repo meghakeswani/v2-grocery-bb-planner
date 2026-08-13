@@ -37,31 +37,13 @@ export default function FilterSidebar({
       </div>
 
       {/* Filter Options matching sketch */}
+      {/* Filter Options grouped logically: Steppers together, then Sliders together */}
       <div className="space-y-4 text-xs">
         
-        {/* Budget */}
-        <div className="space-y-1.5">
-          <div className="flex justify-between items-center text-gray-700 font-semibold">
-            <span>• Budget</span>
-            <span className="font-bold text-gray-900">₹{budget}</span>
-          </div>
-          <input
-            type="range"
-            min={500}
-            max={10000}
-            step={250}
-            value={budget}
-            onChange={(e) => setBudget(Number(e.target.value))}
-            className="w-full accent-[#84c225] cursor-pointer h-1.5 bg-gray-100 rounded-lg"
-          />
-          <div className="flex justify-between text-[10px] text-gray-400">
-            <span>₹500</span>
-            <span>₹10,000</span>
-          </div>
-        </div>
-
-        {/* No. of Days Stepper matching sketch "No. of days [2]" */}
-        <div className="space-y-1.5 pt-2 border-t border-gray-100">
+        {/* 1. STEPPERS GROUP: Days & People */}
+        <div className="space-y-3 pb-3 border-b border-gray-100">
+          
+          {/* No. of Days Stepper */}
           <div className="flex justify-between items-center text-gray-700 font-semibold">
             <span>• No. of days</span>
             <div className="flex items-center space-x-2 bg-gray-50 border border-gray-200 rounded-md px-2 py-0.5">
@@ -80,31 +62,8 @@ export default function FilterSidebar({
               </button>
             </div>
           </div>
-        </div>
 
-        {/* Min Protein / Day matching sketch */}
-        <div className="space-y-1.5 pt-2 border-t border-gray-100">
-          <div className="flex justify-between items-center text-gray-700 font-semibold">
-            <span>• Min protein/day</span>
-            <span className="font-bold text-gray-900">{minProtein}g</span>
-          </div>
-          <input
-            type="range"
-            min={20}
-            max={150}
-            step={5}
-            value={minProtein}
-            onChange={(e) => setMinProtein(Number(e.target.value))}
-            className="w-full accent-[#84c225] cursor-pointer h-1.5 bg-gray-100 rounded-lg"
-          />
-          <div className="flex justify-between text-[10px] text-gray-400">
-            <span>20g</span>
-            <span>150g</span>
-          </div>
-        </div>
-
-        {/* Number of People */}
-        <div className="space-y-1.5 pt-2 border-t border-gray-100">
+          {/* Number of People */}
           <div className="flex justify-between items-center text-gray-700 font-semibold">
             <span>• No. of people</span>
             <div className="flex items-center space-x-2 bg-gray-50 border border-gray-200 rounded-md px-2 py-0.5">
@@ -123,48 +82,99 @@ export default function FilterSidebar({
               </button>
             </div>
           </div>
+
         </div>
 
-        {/* Time Constraint */}
-        <div className="space-y-2 pt-2 border-t border-gray-100">
-          <div className="flex justify-between items-center text-gray-700 font-semibold">
-            <span>• Time</span>
-          </div>
-          <div className="flex items-center space-x-4 text-gray-600 font-medium">
-            <label className="flex items-center space-x-1.5 cursor-pointer hover:text-gray-900">
-              <input
-                type="radio"
-                name="timeConstraint"
-                checked={timeConstraint === 'Easy cook'}
-                onChange={() => setTimeConstraint('Easy cook')}
-                className="accent-[#84c225] w-3.5 h-3.5 cursor-pointer"
-              />
-              <span>Easy cook</span>
-            </label>
-            <label className="flex items-center space-x-1.5 cursor-pointer hover:text-gray-900">
-              <input
-                type="radio"
-                name="timeConstraint"
-                checked={timeConstraint === 'Flexible'}
-                onChange={() => setTimeConstraint('Flexible')}
-                className="accent-[#84c225] w-3.5 h-3.5 cursor-pointer"
-              />
-              <span>Flexible</span>
-            </label>
-          </div>
-        </div>
-
-        {/* Use Pantry First */}
-        <div className="pt-2 border-t border-gray-100">
-          <label className="flex items-center space-x-2 cursor-pointer text-gray-700 font-semibold">
+        {/* 2. SLIDERS GROUP: Budget & Protein */}
+        <div className="space-y-3 pb-3 border-b border-gray-100">
+          
+          {/* Budget */}
+          <div className="space-y-1.5">
+            <div className="flex justify-between items-center text-gray-700 font-semibold">
+              <span>• Budget</span>
+              <span className="font-bold text-gray-900">₹{budget}</span>
+            </div>
             <input
-              type="checkbox"
-              checked={usePantryFirst}
-              onChange={(e) => setUsePantryFirst(e.target.checked)}
-              className="accent-[#84c225] w-4 h-4 cursor-pointer rounded"
+              type="range"
+              min={500}
+              max={10000}
+              step={250}
+              value={budget}
+              onChange={(e) => setBudget(Number(e.target.value))}
+              className="w-full accent-[#84c225] cursor-pointer h-1.5 bg-gray-100 rounded-lg"
             />
-            <span>Use pantry first</span>
-          </label>
+            <div className="flex justify-between text-[10px] text-gray-400">
+              <span>₹500</span>
+              <span>₹10,000</span>
+            </div>
+          </div>
+
+          {/* Min Protein / Day */}
+          <div className="space-y-1.5 pt-1">
+            <div className="flex justify-between items-center text-gray-700 font-semibold">
+              <span>• Min protein/day</span>
+              <span className="font-bold text-gray-900">{minProtein}g</span>
+            </div>
+            <input
+              type="range"
+              min={20}
+              max={150}
+              step={5}
+              value={minProtein}
+              onChange={(e) => setMinProtein(Number(e.target.value))}
+              className="w-full accent-[#84c225] cursor-pointer h-1.5 bg-gray-100 rounded-lg"
+            />
+            <div className="flex justify-between text-[10px] text-gray-400">
+              <span>20g</span>
+              <span>150g</span>
+            </div>
+          </div>
+
+        </div>
+
+        {/* 3. TIME & PANTRY SETTINGS */}
+        <div className="space-y-2.5">
+          {/* Time Constraint */}
+          <div className="space-y-1.5">
+            <div className="flex justify-between items-center text-gray-700 font-semibold">
+              <span>• Time</span>
+            </div>
+            <div className="flex items-center space-x-4 text-gray-600 font-medium">
+              <label className="flex items-center space-x-1.5 cursor-pointer hover:text-gray-900">
+                <input
+                  type="radio"
+                  name="timeConstraint"
+                  checked={timeConstraint === 'Easy cook'}
+                  onChange={() => setTimeConstraint('Easy cook')}
+                  className="accent-[#84c225] w-3.5 h-3.5 cursor-pointer"
+                />
+                <span>Easy cook</span>
+              </label>
+              <label className="flex items-center space-x-1.5 cursor-pointer hover:text-gray-900">
+                <input
+                  type="radio"
+                  name="timeConstraint"
+                  checked={timeConstraint === 'Flexible'}
+                  onChange={() => setTimeConstraint('Flexible')}
+                  className="accent-[#84c225] w-3.5 h-3.5 cursor-pointer"
+                />
+                <span>Flexible</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Use Pantry First */}
+          <div className="pt-1">
+            <label className="flex items-center space-x-2 cursor-pointer text-gray-700 font-semibold">
+              <input
+                type="checkbox"
+                checked={usePantryFirst}
+                onChange={(e) => setUsePantryFirst(e.target.checked)}
+                className="accent-[#84c225] w-4 h-4 cursor-pointer rounded"
+              />
+              <span>Use pantry first</span>
+            </label>
+          </div>
         </div>
 
       </div>

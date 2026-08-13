@@ -149,6 +149,14 @@ export default function App() {
   // State to track completed/eaten meals across the app: { [`${day}-${recipeName}`]: boolean }
   const [completedMeals, setCompletedMeals] = useState({});
 
+  // State for user tracking preferences (Protein, Carbs/Fat, Calories, Budget)
+  const [trackingPreferences, setTrackingPreferences] = useState({
+    trackProtein: true,
+    trackCarbsFat: false,
+    trackCalories: true,
+    trackBudget: true
+  });
+
   const handleSwapCartItem = (oldItemId, newIngredient) => {
     setCartItems((prev) =>
       prev.map((item) => {
@@ -218,6 +226,9 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         cartItemCount={cartItems.reduce((acc, i) => acc + i.count, 0)}
+        cartItems={cartItems}
+        days={days}
+        recipes={recipes}
       />
 
       {/* Main Content Area */}
@@ -275,6 +286,8 @@ export default function App() {
                 cartItems={cartItems}
                 timeConstraint={timeConstraint}
                 usePantryFirst={usePantryFirst}
+                numPeople={numPeople}
+                trackingPreferences={trackingPreferences}
               />
 
             </div>
@@ -310,12 +323,20 @@ export default function App() {
             days={days}
             completedMeals={completedMeals}
             setCompletedMeals={setCompletedMeals}
+            trackingPreferences={trackingPreferences}
             onNavigateToShop={() => setActiveTab('Shop')}
           />
         )}
 
         {/* PROFILE TAB */}
-        {activeTab === 'Profile' && <ProfileView />}
+        {activeTab === 'Profile' && (
+          <ProfileView
+            householdSize={numPeople}
+            setHouseholdSize={setNumPeople}
+            trackingPreferences={trackingPreferences}
+            setTrackingPreferences={setTrackingPreferences}
+          />
+        )}
 
       </main>
 

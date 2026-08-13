@@ -26,6 +26,12 @@ export default function StatsView({
   days = 3,
   completedMeals = {},
   setCompletedMeals,
+  trackingPreferences = {
+    trackProtein: true,
+    trackCarbsFat: false,
+    trackCalories: true,
+    trackBudget: true
+  },
   onNavigateToShop
 }) {
   const [timeframe, setTimeframe] = useState('weekly'); // 'weekly' | 'monthly'

@@ -1,14 +1,32 @@
 import React, { useState } from 'react';
-import { User, Users, Shield, Clock, MapPin, CheckCircle } from 'lucide-react';
+import { User, Users, Shield, Clock, MapPin, CheckCircle, Sliders, CheckSquare, Square } from 'lucide-react';
 
-export default function ProfileView() {
-  const [householdSize, setHouseholdSize] = useState(4);
+export default function ProfileView({
+  householdSize = 2,
+  setHouseholdSize,
+  trackingPreferences = {
+    trackProtein: true,
+    trackCarbsFat: false,
+    trackCalories: true,
+    trackBudget: true
+  },
+  setTrackingPreferences
+}) {
   const [dietaryPref, setDietaryPref] = useState('Pure Veg');
   const [deliverySlot, setDeliverySlot] = useState('6:00 AM - 7:00 AM');
   const [address, setAddress] = useState('Flat 402, Green Acres Apartments, Indiranagar');
   const [city, setCity] = useState('Bengaluru - 560038');
   const [phone, setPhone] = useState('+91 98765 43210');
   const [saved, setSaved] = useState(false);
+
+  const toggleTrackPref = (key) => {
+    if (setTrackingPreferences) {
+      setTrackingPreferences((prev) => ({
+        ...prev,
+        [key]: !prev[key]
+      }));
+    }
+  };
 
   const handleSave = (e) => {
     e.preventDefault();
@@ -18,7 +36,7 @@ export default function ProfileView() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-300">
-      <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-6 shadow-2xs">
+      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-6 shadow-2xs">
         
         {/* Header */}
         <div className="flex items-center space-x-3 pb-4 border-b border-gray-100">
@@ -26,23 +44,26 @@ export default function ProfileView() {
             bb
           </div>
           <div>
-            <h1 className="text-base font-bold text-gray-900">Household & Subscription Profile</h1>
-            <p className="text-xs text-gray-500">Configure your default AI meal planner settings and delivery preferences</p>
+            <h1 className="text-base font-bold text-gray-900">Household & Tracking Preferences</h1>
+            <p className="text-xs text-gray-500">Configure your default household size, metrics to track, and delivery settings</p>
           </div>
         </div>
 
         <form onSubmit={handleSave} className="space-y-5 text-xs">
           
-          {/* Household Size */}
+          {/* 1. Household Size (Synced with Filters) */}
           <div className="space-y-2">
-            <label className="font-bold text-gray-800 flex items-center space-x-1.5">
-              <Users className="w-4 h-4 text-[#84c225]" />
-              <span>Household Size</span>
+            <label className="font-bold text-gray-800 flex items-center justify-between">
+              <span className="flex items-center space-x-1.5">
+                <Users className="w-4 h-4 text-[#84c225]" />
+                <span>Household Size (Default for Planner)</span>
+              </span>
+              <span className="text-[10px] text-gray-400 font-normal">Syncs with Shop filter</span>
             </label>
             <div className="flex items-center space-x-4">
               <button
                 type="button"
-                onClick={() => setHouseholdSize(Math.max(1, householdSize - 1))}
+                onClick={() => setHouseholdSize && setHouseholdSize(Math.max(1, householdSize - 1))}
                 className="w-9 h-9 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-gray-700 font-bold text-base transition-all cursor-pointer active:scale-95"
               >
                 −
@@ -53,7 +74,7 @@ export default function ProfileView() {
               </div>
               <button
                 type="button"
-                onClick={() => setHouseholdSize(Math.min(12, householdSize + 1))}
+                onClick={() => setHouseholdSize && setHouseholdSize(Math.min(12, householdSize + 1))}
                 className="w-9 h-9 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-gray-700 font-bold text-base transition-all cursor-pointer active:scale-95"
               >
                 +
@@ -61,11 +82,60 @@ export default function ProfileView() {
             </div>
           </div>
 
-          {/* Dietary Preferences requested: Pure Veg, High Protein, Organic Focus */}
+          {/* 2. What to Track Preferences (Customizable Metrics) */}
+          <div className="space-y-2.5 pt-3 border-t border-gray-100">
+            <label className="font-bold text-gray-800 flex items-center justify-between">
+              <span className="flex items-center space-x-1.5">
+                <Sliders className="w-4 h-4 text-[#84c225]" />
+                <span>Nutrition & Budget Metrics to Track</span>
+              </span>
+              <span className="text-[10px] text-gray-400 font-normal">Customizes recipe cards & stats</span>
+            </label>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {[
+                { key: 'trackProtein', title: 'Daily Protein Target', desc: 'Track protein grams per meal and hit daily goals' },
+                { key: 'trackBudget', title: 'Grocery Budget Allowance', desc: 'Track spending against your weekly budget cap' },
+                { key: 'trackCalories', title: 'Meal Calorie Counts (~kcal)', desc: 'Show estimated calories per dish on cards' },
+                { key: 'trackCarbsFat', title: 'Carbohydrates & Fats (C / F)', desc: 'Display detailed carbs and fat breakdown' }
+              ].map((item) => {
+                const isChecked = !!trackingPreferences[item.key];
+                return (
+                  <div
+                    key={item.key}
+                    onClick={() => toggleTrackPref(item.key)}
+                    className={`p-3 rounded-xl border transition-all cursor-pointer flex items-start space-x-2.5 ${
+                      isChecked
+                        ? 'bg-emerald-50/40 border-emerald-300 ring-1 ring-emerald-100'
+                        : 'bg-gray-50/70 border-gray-200 text-gray-400'
+                    }`}
+                  >
+                    <div className="mt-0.5 shrink-0">
+                      {isChecked ? (
+                        <CheckSquare className="w-4 h-4 text-[#84c225]" />
+                      ) : (
+                        <Square className="w-4 h-4 text-gray-400" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className={`font-bold text-xs ${isChecked ? 'text-gray-900' : 'text-gray-500'}`}>
+                        {item.title}
+                      </p>
+                      <p className="text-[10px] text-gray-400 leading-tight mt-0.5">
+                        {item.desc}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 3. Dietary Preferences */}
           <div className="space-y-2 pt-3 border-t border-gray-100">
             <label className="font-bold text-gray-800 flex items-center space-x-1.5">
               <Shield className="w-4 h-4 text-[#84c225]" />
-              <span>Dietary Preferences</span>
+              <span>Dietary Focus</span>
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {['Pure Veg', 'High Protein', 'Organic Focus', 'Vegan', 'Jain'].map((diet) => (
@@ -85,11 +155,11 @@ export default function ProfileView() {
             </div>
           </div>
 
-          {/* Recurring Delivery Slot */}
+          {/* 4. Recurring Delivery Slot */}
           <div className="space-y-2 pt-3 border-t border-gray-100">
             <label className="font-bold text-gray-800 flex items-center space-x-1.5">
               <Clock className="w-4 h-4 text-[#84c225]" />
-              <span>Recurring Delivery Slot</span>
+              <span>Recurring Morning Delivery Slot</span>
             </label>
             <select
               value={deliverySlot}
@@ -102,7 +172,7 @@ export default function ProfileView() {
             </select>
           </div>
 
-          {/* Delivery Address & Contact */}
+          {/* 5. Delivery Address & Contact */}
           <div className="space-y-2 pt-3 border-t border-gray-100">
             <label className="font-bold text-gray-800 flex items-center space-x-1.5">
               <MapPin className="w-4 h-4 text-[#84c225]" />

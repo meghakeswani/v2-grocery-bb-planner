@@ -12,7 +12,14 @@ export default function RecipeBoard({
   onAddMealToCart,
   cartItems,
   timeConstraint,
-  usePantryFirst
+  usePantryFirst,
+  numPeople = 2,
+  trackingPreferences = {
+    trackProtein: true,
+    trackCarbsFat: false,
+    trackCalories: true,
+    trackBudget: true
+  }
 }) {
   const [splittingMeal, setSplittingMeal] = useState(null);
   
@@ -327,19 +334,18 @@ export default function RecipeBoard({
                             <span>{recipe.cookTime} min</span>
                           </div>
 
-                          {/* Shuffle Button (Floating on top-right) */}
+                          {/* Shuffle Button (Small Icon-only floating on top-right) */}
                           <button
                             type="button"
                             onClick={(e) => handleShuffleSlot(dayIndex, mealIdx, e)}
-                            className="absolute top-2 right-2 z-10 px-2 py-1 bg-white/95 hover:bg-white text-gray-700 hover:text-[#689f38] rounded-full border border-gray-200 shadow-sm text-[10px] font-bold flex items-center space-x-1 cursor-pointer transition-all hover:scale-105 active:scale-95"
-                            title="Shuffle / Swap this recipe"
+                            className="absolute top-2 right-2 z-10 p-1.5 bg-white/95 hover:bg-white text-gray-700 hover:text-[#689f38] rounded-full border border-gray-200 shadow-sm cursor-pointer transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
+                            title="Shuffle recipe"
                           >
                             <Shuffle
-                              className={`w-3 h-3 text-[#84c225] transition-transform duration-300 ${
+                              className={`w-3.5 h-3.5 text-[#84c225] transition-transform duration-300 ${
                                 isShuffling ? 'rotate-180' : ''
                               }`}
                             />
-                            <span>Shuffle</span>
                           </button>
                         </div>
 
@@ -351,13 +357,30 @@ export default function RecipeBoard({
                             </h3>
 
                             <div className="flex items-center justify-between mt-1 text-[11px] text-gray-500 font-medium">
-                              <span className="text-[#84c225] font-extrabold text-xs">
-                                {recipe.totalProtein}g Protein
-                              </span>
-                              <span className="text-gray-400">
-                                {allIngs.length} Ingredients
-                              </span>
+                              {trackingPreferences.trackProtein !== false ? (
+                                <span className="text-[#84c225] font-extrabold text-xs">
+                                  {recipe.totalProtein}g Protein
+                                </span>
+                              ) : (
+                                <span className="text-gray-700 font-bold text-xs">{recipe.cookTime} mins</span>
+                              )}
+                              {trackingPreferences.trackCalories !== false && (
+                                <span className="text-[10px] text-gray-400">
+                                  ~{recipe.totalCalories || 340} kcal
+                                </span>
+                              )}
                             </div>
+
+                            {/* Macro Breakdown Strip (Only shown if trackCarbsFat is enabled in Profile) */}
+                            {trackingPreferences.trackCarbsFat && (
+                              <div className="flex items-center space-x-1.5 mt-1 text-[9.5px] text-gray-400 font-medium">
+                                <span>Carbs: {recipe.totalCarbs || 38}g</span>
+                                <span>•</span>
+                                <span>Fat: {recipe.totalFat || 12}g</span>
+                                <span>•</span>
+                                <span>{allIngs.length} items</span>
+                              </div>
+                            )}
 
                             {/* Pantry match indicator */}
                             {pantryMatches.length > 0 && (
@@ -368,11 +391,13 @@ export default function RecipeBoard({
                             )}
                           </div>
 
-                          {/* Cost Breakdown */}
+                          {/* Cost Breakdown with explicit people count */}
                           <div className="pt-1.5 border-t border-gray-100 flex items-center justify-between text-[10.5px]">
                             <div>
-                              <span className="text-gray-400 block text-[9px]">Portion Cost</span>
-                              <span className="font-bold text-gray-800">₹{selectedRecipeCost}</span>
+                              <span className="text-gray-400 block text-[9px]">
+                                Portion Cost ({numPeople} {numPeople === 1 ? 'person' : 'people'})
+                              </span>
+                              <span className="font-bold text-gray-800">₹{selectedRecipeCost * numPeople}</span>
                             </div>
                             <div className="text-right">
                               <span className="text-gray-400 block text-[9px]">Store Pack (x5)</span>
@@ -380,7 +405,7 @@ export default function RecipeBoard({
                             </div>
                           </div>
 
-                          {/* Customize Status Indicator & Add to Cart Button */}
+                          {/* Add to Cart Button */}
                           <div className="space-y-1.5 pt-1">
                             <button
                               type="button"

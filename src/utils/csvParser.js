@@ -214,6 +214,9 @@ export function processCSVData(csvText) {
     let essentialPrice = 0;
     let essentialDiscountPrice = 0;
     let essentialProtein = 0;
+    let essentialCarbs = 0;
+    let essentialFat = 0;
+    let essentialFiber = 0;
     let packetPriceSum = 0;
     let packetDiscountPriceSum = 0;
 
@@ -221,12 +224,17 @@ export function processCSVData(csvText) {
       essentialPrice += item.price;
       essentialDiscountPrice += item.discountPrice;
       essentialProtein += item.protein;
+      essentialCarbs += (item.carbs || 0);
+      essentialFat += (item.fat || 0);
+      essentialFiber += (item.fiber || 0);
       packetPriceSum += item.packetPrice;
       packetDiscountPriceSum += item.packetDiscountPrice;
     });
 
     seedCounter += 7;
     const popularityScore = 80 + (seedCounter % 20);
+
+    const calories = Math.round(essentialProtein * 4 + essentialCarbs * 4 + essentialFat * 9) || 340;
 
     return {
       ...r,
@@ -240,6 +248,10 @@ export function processCSVData(csvText) {
       savings: Math.round((essentialPrice - essentialDiscountPrice) * 100) / 100,
       discountPercent: essentialPrice > 0 ? Math.round(((essentialPrice - essentialDiscountPrice) / essentialPrice) * 100) : 0,
       totalProtein: Math.round(essentialProtein),
+      totalCarbs: Math.round(essentialCarbs),
+      totalFat: Math.round(essentialFat),
+      totalFiber: Math.round(essentialFiber),
+      totalCalories: calories,
       popularityScore
     };
   });
