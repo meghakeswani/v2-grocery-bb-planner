@@ -8,11 +8,9 @@ import {
   CheckCircle2,
   Circle,
   Clock,
-  ChevronRight,
   Flame,
   Utensils,
-  ShoppingBag,
-  ArrowRight
+  ChevronRight
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -31,10 +29,10 @@ export default function StatsView({
   onNavigateToShop
 }) {
   const [timeframe, setTimeframe] = useState('weekly'); // 'weekly' | 'monthly'
+  const [selectedDayTab, setSelectedDayTab] = useState(1); // Day tab for compact meal schedule
 
   // Derive the active meal plan from cartItems, or fallback to first recipes for configured days
   const daywiseMealPlan = useMemo(() => {
-    // 1. Group bought cart items by (dayAssigned, recipeName)
     const dayGroups = {};
     for (let d = 1; d <= days; d++) {
       dayGroups[d] = [];
@@ -73,7 +71,7 @@ export default function StatsView({
       });
     }
 
-    // 2. If any day has no bought meals yet, populate from recipes plan as upcoming schedule
+    // If any day has no bought meals yet, populate from recipes plan
     for (let d = 1; d <= days; d++) {
       if (!dayGroups[d] || dayGroups[d].length === 0) {
         dayGroups[d] = [0, 1, 2].map((idx) => {
@@ -137,10 +135,9 @@ export default function StatsView({
     }
 
     if (isNowComplete) {
-      // Gentle celebratory confetti
       confetti({
-        particleCount: 40,
-        spread: 45,
+        particleCount: 35,
+        spread: 40,
         origin: { y: 0.7 }
       });
     }
@@ -149,23 +146,36 @@ export default function StatsView({
   const planProteinTarget = minProteinPerDay * days;
   const progressPercent = Math.min(100, Math.round((trackedConsumedProtein / (planProteinTarget || 1)) * 100));
 
-  // Mock daywise protein intake data for week
-  const daywiseProteinWeek = [
-    { day: 'Day 1', protein: trackedConsumedProtein > 0 ? Math.min(trackedConsumedProtein, minProteinPerDay) : 0, target: minProteinPerDay },
-    { day: 'Day 2', protein: trackedConsumedProtein > minProteinPerDay ? Math.min(trackedConsumedProtein - minProteinPerDay, minProteinPerDay) : 0, target: minProteinPerDay },
-    { day: 'Day 3', protein: trackedConsumedProtein > minProteinPerDay * 2 ? trackedConsumedProtein - minProteinPerDay * 2 : 0, target: minProteinPerDay }
+  // Daywise protein data for the bar chart
+  const daywiseProteinWeek = useMemo(() => {
+    return [
+      { day: 'Mon', protein: 55, target: 50 },
+      { day: 'Tue', protein: 62, target: 50 },
+      { day: 'Wed', protein: 48, target: 50 },
+      { day: 'Thu', protein: 70, target: 50 },
+      { day: 'Fri', protein: 65, target: 50 },
+      { day: 'Sat', protein: 80, target: 50 },
+      { day: 'Sun', protein: 58, target: 50 }
+    ];
+  }, []);
+
+  // Top common household dishes
+  const topDishes = [
+    { name: 'Dal Tadka', count: 14, percent: 85, protein: '24g' },
+    { name: 'Palak Paneer', count: 11, percent: 70, protein: '22g' },
+    { name: 'Chana Masala', count: 9, percent: 55, protein: '28g' },
+    { name: 'Poha', count: 8, percent: 50, protein: '14g' },
+    { name: 'Rajma Curry', count: 7, percent: 45, protein: '22g' }
   ];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 animate-in fade-in duration-300">
+    <div className="max-w-6xl mx-auto space-y-5 animate-in fade-in duration-300">
       
-      {/* 1. Header & Timeframe Toggle */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 border-b border-gray-100">
+      {/* 1. Header & Timeframe Controls */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-gray-100">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Meal Plan & Protein Tracker</h1>
-          <p className="text-xs text-gray-500">
-            Handy daily meal schedule based on your cart. Check off meals as you cook & eat to track live protein intake.
-          </p>
+          <h1 className="text-lg font-bold text-gray-900">Household Intelligence & Nutrition Stats</h1>
+          <p className="text-xs text-gray-500">Live meal schedule, protein tracking, budget trends, and household analytics</p>
         </div>
 
         <div className="flex items-center space-x-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
@@ -175,7 +185,7 @@ export default function StatsView({
               timeframe === 'weekly' ? 'bg-[#84c225] text-white shadow-2xs' : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            {days} Days Plan
+            Weekly
           </button>
           <button
             onClick={() => setTimeframe('monthly')}
@@ -183,137 +193,41 @@ export default function StatsView({
               timeframe === 'monthly' ? 'bg-[#84c225] text-white shadow-2xs' : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            30 Days Trend
+            Monthly
           </button>
         </div>
       </div>
 
-      {/* 2. Minimalist Infographic Live Protein Dashboard */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-xs grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
+      {/* 2. Compact Infographic Live Meal & Protein Tracker */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-xs space-y-3">
         
-        {/* Left: Circular Infographic Gauge */}
-        <div className="md:col-span-4 flex items-center space-x-4 border-r-0 md:border-r border-gray-100 pr-0 md:pr-4">
-          <div className="relative w-24 h-24 flex items-center justify-center shrink-0">
-            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-              <path
-                className="text-gray-100"
-                strokeWidth="3.5"
-                stroke="currentColor"
-                fill="none"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              />
-              <path
-                className="text-[#84c225] transition-all duration-700 ease-out"
-                strokeDasharray={`${progressPercent}, 100`}
-                strokeWidth="3.5"
-                strokeLinecap="round"
-                stroke="currentColor"
-                fill="none"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              />
-            </svg>
-            <div className="absolute flex flex-col items-center justify-center text-center">
-              <span className="text-lg font-black text-gray-900 leading-none">{progressPercent}%</span>
-              <span className="text-[9px] text-gray-400 font-semibold uppercase">Protein Met</span>
-            </div>
-          </div>
-
-          <div className="space-y-1 min-w-0">
-            <div className="flex items-center space-x-1 text-[#84c225] font-bold text-xs">
-              <Flame className="w-3.5 h-3.5" />
-              <span>Live Consumed</span>
-            </div>
-            <div className="text-xl font-extrabold text-gray-900">
-              {trackedConsumedProtein}g <span className="text-xs text-gray-400 font-normal">/ {planProteinTarget}g Target</span>
-            </div>
-            <p className="text-[10.5px] text-gray-500">
-              {completedCount} of {totalPlannedMealsCount} meals checked as made & eaten
-            </p>
-          </div>
-        </div>
-
-        {/* Center: Infographic Daily Milestone Pills */}
-        <div className="md:col-span-5 space-y-2">
-          <div className="flex items-center justify-between text-xs">
-            <span className="font-bold text-gray-800">Daily Intake Achievements</span>
-            <span className="text-[10px] text-gray-400">Target: {minProteinPerDay}g/day</span>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2">
-            {Array.from({ length: days }, (_, i) => {
-              const dayNum = i + 1;
-              const mealsForDay = daywiseMealPlan[dayNum] || [];
-              const dayConsumedProtein = mealsForDay.reduce(
-                (sum, m) => sum + (completedMeals[m.id] ? m.protein : 0),
-                0
-              );
-              const isGoalAchieved = dayConsumedProtein >= minProteinPerDay;
-              const dayPct = Math.min(100, Math.round((dayConsumedProtein / minProteinPerDay) * 100));
-
-              return (
-                <div
-                  key={`day-pill-${dayNum}`}
-                  className={`p-2.5 rounded-xl border text-center space-y-1 transition-all ${
-                    isGoalAchieved
-                      ? 'bg-emerald-50/80 border-emerald-200 text-emerald-950 shadow-2xs'
-                      : 'bg-gray-50/80 border-gray-200 text-gray-700'
-                  }`}
-                >
-                  <div className="flex items-center justify-center space-x-1 text-[11px] font-bold">
-                    <span>Day {dayNum}</span>
-                    {isGoalAchieved && <CheckCircle2 className="w-3 h-3 text-[#84c225]" />}
-                  </div>
-                  <div className="text-xs font-black text-gray-900">
-                    {dayConsumedProtein}g
-                  </div>
-                  <div className="w-full bg-gray-200 h-1 rounded-full overflow-hidden">
-                    <div
-                      className="bg-[#84c225] h-full rounded-full transition-all duration-500"
-                      style={{ width: `${dayPct}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Right: Quick Action Banner */}
-        <div className="md:col-span-3 bg-gray-50 p-3 rounded-xl border border-gray-200 text-xs space-y-1.5 flex flex-col justify-between h-full">
-          <div className="flex items-center space-x-1.5 font-bold text-gray-900 text-[11px]">
-            <Utensils className="w-3.5 h-3.5 text-[#84c225]" />
-            <span>Interactive Tracking</span>
-          </div>
-          <p className="text-[10.5px] text-gray-500 leading-tight">
-            Click any meal card below when you prepare it to mark it <strong>Made & Had</strong> and update your daily protein.
-          </p>
-          {cartItems.length === 0 && (
-            <button
-              onClick={onNavigateToShop}
-              className="text-[10.5px] font-bold text-[#84c225] hover:underline flex items-center space-x-1 cursor-pointer pt-1"
-            >
-              <span>Add more meals from Shop</span>
-              <ArrowRight className="w-3 h-3" />
-            </button>
-          )}
-        </div>
-
-      </div>
-
-      {/* 3. Infographic Meal Schedule (Minimalist Daywise Cards) */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        {/* Top Info Strip */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-gray-100">
           <div className="flex items-center space-x-2">
             <Calendar className="w-4 h-4 text-[#84c225]" />
-            <h2 className="font-bold text-gray-900 text-sm">Schedule: What to Cook & When</h2>
+            <h2 className="font-bold text-gray-900 text-xs">Interactive Meal Plan & Live Protein Tracker</h2>
+            <span className="text-[10px] text-gray-400 font-medium">
+              (Click any meal to mark as Made & Had)
+            </span>
           </div>
-          <span className="text-[11px] text-gray-400 font-medium">
-            {cartItems.length > 0 ? '✓ Synced with your Bought Cart' : 'Planned Template (Ready to Cook)'}
-          </span>
+
+          <div className="flex items-center space-x-3 text-xs">
+            <div className="flex items-center space-x-1.5 font-bold">
+              <Flame className="w-3.5 h-3.5 text-[#84c225]" />
+              <span className="text-gray-900">{trackedConsumedProtein}g</span>
+              <span className="text-gray-400 font-normal">/ {planProteinTarget}g Target ({progressPercent}%)</span>
+            </div>
+            <div className="w-20 h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className="bg-[#84c225] h-full rounded-full transition-all duration-500"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Day-by-Day Infographic Lanes */}
-        <div className="space-y-4">
+        {/* Compact Daywise Infographic Meal Chips Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {Array.from({ length: days }, (_, i) => {
             const dayNum = i + 1;
             const meals = daywiseMealPlan[dayNum] || [];
@@ -321,192 +235,223 @@ export default function StatsView({
               (sum, m) => sum + (completedMeals[m.id] ? m.protein : 0),
               0
             );
+            const isDayGoalMet = dayConsumed >= minProteinPerDay;
 
             return (
               <div
-                key={`lane-day-${dayNum}`}
-                className="bg-white rounded-2xl border border-gray-200 p-4 space-y-3 shadow-2xs hover:border-gray-300 transition-colors"
+                key={`compact-day-${dayNum}`}
+                className="bg-gray-50/70 border border-gray-200 rounded-xl p-2.5 space-y-2"
               >
-                {/* Lane Header */}
-                <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
-                  <div className="flex items-center space-x-2.5">
-                    <span className="bg-gray-900 text-white text-xs font-black px-2.5 py-0.5 rounded-lg tracking-wider">
+                {/* Day Header */}
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center space-x-1.5">
+                    <span className="font-extrabold text-[11px] text-gray-900 bg-white px-2 py-0.5 rounded border border-gray-200 shadow-2xs">
                       DAY {dayNum}
                     </span>
-                    <span className="text-xs font-semibold text-gray-600">
-                      {meals.length} Meals Scheduled
-                    </span>
-                  </div>
-
-                  <div className="flex items-center space-x-2 text-xs">
-                    <span className="text-gray-400 text-[11px]">Day Protein:</span>
-                    <span className={`font-bold text-xs ${dayConsumed >= minProteinPerDay ? 'text-[#689f38]' : 'text-gray-800'}`}>
+                    <span className="text-[10px] font-semibold text-gray-500">
                       {dayConsumed}g / {minProteinPerDay}g
                     </span>
-                    {dayConsumed >= minProteinPerDay && (
-                      <span className="bg-emerald-50 text-[#689f38] text-[9.5px] font-bold px-1.5 py-0.2 rounded border border-emerald-100">
-                        Target Hit!
-                      </span>
-                    )}
                   </div>
+
+                  {isDayGoalMet ? (
+                    <span className="bg-emerald-100 text-[#689f38] text-[9.5px] font-extrabold px-1.5 py-0.2 rounded flex items-center space-x-0.5">
+                      <CheckCircle2 className="w-2.5 h-2.5" />
+                      <span>Hit!</span>
+                    </span>
+                  ) : (
+                    <span className="text-[9.5px] text-gray-400">
+                      {meals.filter((m) => completedMeals[m.id]).length}/{meals.length} Had
+                    </span>
+                  )}
                 </div>
 
-                {/* Meals 3-Column Minimalist Infographic Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {/* Compact Interactive Meal Chips */}
+                <div className="space-y-1.5">
                   {meals.map((meal, mIdx) => {
                     const isDone = !!completedMeals[meal.id];
-                    const mealLabel = mIdx === 0 ? 'Breakfast' : mIdx === 1 ? 'Lunch' : 'Dinner';
+                    const mealType = mIdx === 0 ? 'Breakfast' : mIdx === 1 ? 'Lunch' : 'Dinner';
 
                     return (
                       <div
                         key={meal.id}
                         onClick={() => toggleMealComplete(meal.id, meal.protein)}
-                        className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col justify-between space-y-2 relative overflow-hidden group ${
+                        className={`p-2 rounded-lg border transition-all cursor-pointer flex items-center justify-between gap-2 ${
                           isDone
-                            ? 'bg-emerald-50/40 border-emerald-300 ring-1 ring-emerald-200 shadow-2xs'
-                            : 'bg-gray-50/50 hover:bg-white border-gray-200 hover:border-gray-300 shadow-2xs'
+                            ? 'bg-white border-emerald-300 ring-1 ring-emerald-100 text-gray-900 shadow-2xs'
+                            : 'bg-white hover:bg-gray-100/60 border-gray-200 text-gray-700'
                         }`}
                       >
-                        {/* Top: Thumbnail, Slot Tag, Cook Time */}
-                        <div className="flex items-center space-x-2.5">
+                        <div className="flex items-center space-x-2 min-w-0">
                           <img
                             src={meal.image}
                             alt={meal.recipeName}
-                            className={`w-11 h-11 rounded-lg object-cover bg-gray-100 border border-gray-200 shrink-0 transition-opacity ${
-                              isDone ? 'opacity-80' : 'opacity-100'
-                            }`}
+                            className="w-7 h-7 rounded-md object-cover bg-gray-50 border border-gray-100 shrink-0"
                             onError={(e) => {
-                              e.target.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120';
+                              e.target.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=80';
                             }}
                           />
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[9.5px] font-bold uppercase tracking-wider text-gray-400">
-                                {mealLabel}
-                              </span>
-                              <span className="text-[9.5px] text-gray-400 flex items-center space-x-0.5">
-                                <Clock className="w-2.5 h-2.5" />
-                                <span>{meal.cookTime}m</span>
-                              </span>
-                            </div>
-
-                            <h3 className={`font-bold text-xs truncate mt-0.5 ${isDone ? 'line-through text-gray-500' : 'text-gray-900'}`}>
+                          <div className="min-w-0">
+                            <p className={`font-bold text-[11px] truncate ${isDone ? 'line-through text-gray-400' : 'text-gray-900'}`}>
                               {meal.recipeName}
-                            </h3>
+                            </p>
+                            <p className="text-[9px] text-gray-400">
+                              {mealType} • {meal.cookTime}m
+                            </p>
                           </div>
                         </div>
 
-                        {/* Middle: Protein & Specs */}
-                        <div className="flex items-center justify-between text-[11px] pt-1 border-t border-gray-100/80">
-                          <span className={`font-extrabold ${isDone ? 'text-[#689f38]' : 'text-gray-900'}`}>
-                            +{meal.protein}g Protein
+                        <div className="flex items-center space-x-1.5 shrink-0">
+                          <span className={`text-[10px] font-bold ${isDone ? 'text-[#689f38]' : 'text-gray-600'}`}>
+                            +{meal.protein}g
                           </span>
-
-                          <span className="text-[10px] text-gray-400">
-                            {meal.ingredients.length > 0 ? `${meal.ingredients.length} items` : '1 portion'}
-                          </span>
-                        </div>
-
-                        {/* Bottom: Interactive "Made & Eaten" Button */}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleMealComplete(meal.id, meal.protein);
-                          }}
-                          className={`w-full py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
-                            isDone
-                              ? 'bg-[#84c225] text-white shadow-2xs'
-                              : 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-200'
-                          }`}
-                        >
                           {isDone ? (
-                            <>
-                              <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-                              <span>Made & Had (+{meal.protein}g)</span>
-                            </>
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[#84c225]" />
                           ) : (
-                            <>
-                              <Circle className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#84c225]" />
-                              <span>Mark Made & Eaten</span>
-                            </>
+                            <Circle className="w-3.5 h-3.5 text-gray-300 hover:text-[#84c225]" />
                           )}
-                        </button>
-
+                        </div>
                       </div>
                     );
                   })}
                 </div>
-
               </div>
             );
           })}
         </div>
+
       </div>
 
-      {/* 4. Weekly Challenges & BB Cash Rewards */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4 shadow-2xs">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Award className="w-5 h-5 text-[#84c225]" />
-            <h2 className="font-bold text-gray-900 text-sm">Active Challenges & BB Cash Rewards</h2>
+      {/* 3. Analytics Charts Grid: Daywise Protein Chart + Common Dishes */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        
+        {/* Daywise Protein Bar Chart */}
+        <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3 shadow-2xs">
+          <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+            <h3 className="font-bold text-gray-900 text-xs flex items-center space-x-1.5">
+              <BarChart2 className="w-4 h-4 text-[#84c225]" />
+              <span>Daywise Protein Intake ({timeframe === 'weekly' ? 'This Week' : 'This Month'})</span>
+            </h3>
+            <span className="text-[10px] text-gray-400">Target: {minProteinPerDay}g/day</span>
           </div>
-          <div className="flex items-center space-x-1.5 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 text-xs">
-            <span className="font-extrabold text-[#689f38]">450 BB Cash Points</span>
+
+          <div className="h-40 flex items-end justify-between pt-3 px-2">
+            {daywiseProteinWeek.map((item) => {
+              const heightPercent = Math.min(100, (item.protein / 90) * 100);
+              return (
+                <div key={item.day} className="flex flex-col items-center space-y-1.5 flex-1">
+                  <span className="text-[9.5px] font-bold text-gray-700">{item.protein}g</span>
+                  <div className="w-5 bg-gray-100 rounded-t-md h-28 flex items-end justify-center overflow-hidden">
+                    <div
+                      className="w-full bg-[#84c225] rounded-t-md transition-all duration-500"
+                      style={{ height: `${heightPercent}%` }}
+                    ></div>
+                  </div>
+                  <span className="text-[9.5px] text-gray-500 font-semibold">{item.day}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          
+        {/* Most Common Household Dishes */}
+        <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3 shadow-2xs">
+          <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+            <h3 className="font-bold text-gray-900 text-xs">Most Common Household Dishes</h3>
+            <span className="text-[10px] text-gray-400">Last 30 Days</span>
+          </div>
+
+          <div className="space-y-2.5">
+            {topDishes.map((dish) => (
+              <div key={dish.name} className="space-y-1 text-xs">
+                <div className="flex justify-between font-semibold text-gray-800 text-[10.5px]">
+                  <span>{dish.name} ({dish.protein} Protein)</span>
+                  <span className="text-gray-500">{dish.count} orders</span>
+                </div>
+                <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-[#84c225] rounded-full transition-all duration-500"
+                    style={{ width: `${dish.percent}%` }}
+                  ></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+
+      {/* 4. Active Challenges & BB Cash Rewards Section */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3 shadow-2xs">
+        <div className="flex items-center justify-between pb-1 border-b border-gray-100">
+          <div className="flex items-center space-x-1.5">
+            <Award className="w-4 h-4 text-[#84c225]" />
+            <h2 className="font-bold text-gray-900 text-xs">Active Challenges & BB Cash Rewards</h2>
+          </div>
+          <div className="flex items-center space-x-1 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 text-xs">
+            <span className="font-extrabold text-[#689f38] text-[11px]">450 BB Cash Points</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {/* Challenge 1 */}
-          <div className="p-3.5 rounded-lg bg-gray-50 border border-gray-100 space-y-2">
+          <div className="p-3 rounded-lg bg-gray-50 border border-gray-100 space-y-1.5">
             <div className="flex justify-between text-xs">
-              <span className="font-bold text-gray-800">🎯 Budget Master</span>
-              <span className="font-bold text-[#84c225]">+150 pts</span>
+              <span className="font-bold text-gray-800 text-[11px]">🎯 Budget Master</span>
+              <span className="font-bold text-[#84c225] text-[11px]">+150 pts</span>
             </div>
-            <p className="text-[11px] text-gray-500">Stay under ₹{budgetTarget} weekly budget allowance</p>
-            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+            <p className="text-[10px] text-gray-500">Stay under ₹{budgetTarget} weekly allowance</p>
+            <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
               <div className="h-full bg-[#84c225] rounded-full w-[85%]"></div>
             </div>
-            <span className="text-[10px] text-gray-400 font-semibold block text-right">85% Completed</span>
+            <span className="text-[9.5px] text-gray-400 font-semibold block text-right">85% Completed</span>
           </div>
 
           {/* Challenge 2 */}
-          <div className="p-3.5 rounded-lg bg-gray-50 border border-gray-100 space-y-2">
+          <div className="p-3 rounded-lg bg-gray-50 border border-gray-100 space-y-1.5">
             <div className="flex justify-between text-xs">
-              <span className="font-bold text-gray-800">💪 Protein Powerhouse</span>
-              <span className="font-bold text-[#84c225]">+200 pts</span>
+              <span className="font-bold text-gray-800 text-[11px]">💪 Protein Powerhouse</span>
+              <span className="font-bold text-[#84c225] text-[11px]">+200 pts</span>
             </div>
-            <p className="text-[11px] text-gray-500">Hit &gt;{minProteinPerDay}g protein/day goal</p>
-            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+            <p className="text-[10px] text-gray-500">Hit &gt;{minProteinPerDay}g protein/day goal</p>
+            <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
               <div className="h-full bg-[#84c225] rounded-full" style={{ width: `${progressPercent}%` }}></div>
             </div>
-            <span className="text-[10px] text-[#689f38] font-bold block text-right flex items-center justify-end space-x-1">
-              {progressPercent >= 100 ? (
-                <>
-                  <CheckCircle2 className="w-3 h-3" />
-                  <span>Goal Achieved!</span>
-                </>
-              ) : (
-                <span>{progressPercent}% Tracked</span>
-              )}
+            <span className="text-[9.5px] text-[#689f38] font-bold block text-right">
+              {progressPercent >= 100 ? '✓ Goal Achieved!' : `${progressPercent}% Tracked`}
             </span>
           </div>
 
           {/* Challenge 3 */}
-          <div className="p-3.5 rounded-lg bg-gray-50 border border-gray-100 space-y-2">
+          <div className="p-3 rounded-lg bg-gray-50 border border-gray-100 space-y-1.5">
             <div className="flex justify-between text-xs">
-              <span className="font-bold text-gray-800">🌿 Zero Food Waste Warrior</span>
-              <span className="font-bold text-[#84c225]">+100 pts</span>
+              <span className="font-bold text-gray-800 text-[11px]">🌿 Zero Food Waste</span>
+              <span className="font-bold text-[#84c225] text-[11px]">+100 pts</span>
             </div>
-            <p className="text-[11px] text-gray-500">Cook planned meals without spoilage</p>
-            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div className="h-full bg-[#84c225] rounded-full" style={{ width: `${Math.min(100, Math.round((completedCount / (totalPlannedMealsCount || 1)) * 100))}%` }}></div>
+            <p className="text-[10px] text-gray-500">Cook planned meals without spoilage</p>
+            <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-[#84c225] rounded-full"
+                style={{ width: `${Math.min(100, Math.round((completedCount / (totalPlannedMealsCount || 1)) * 100))}%` }}
+              ></div>
             </div>
-            <span className="text-[10px] text-gray-400 font-semibold block text-right">{completedCount}/{totalPlannedMealsCount} Cooked</span>
+            <span className="text-[9.5px] text-gray-400 font-semibold block text-right">
+              {completedCount}/{totalPlannedMealsCount} Cooked
+            </span>
           </div>
-
         </div>
+      </div>
+
+      {/* 5. Strategic AI Household Recommendation Insights */}
+      <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-200 text-xs space-y-1.5">
+        <div className="flex items-center space-x-1.5 font-bold text-gray-900 text-xs">
+          <Sparkles className="w-4 h-4 text-[#84c225]" />
+          <span>Strategic Household Recommendations</span>
+        </div>
+        <p className="text-gray-600 leading-relaxed text-[11px]">
+          • Cooking planned high-protein dishes on scheduled days delivers <strong>+{minProteinPerDay}g</strong> daily nutrition without meal repetition.
+          <br />
+          • Utilizing existing pantry ingredients saves an estimated <strong>₹140</strong> per week in household grocery budget.
+        </p>
       </div>
 
     </div>
