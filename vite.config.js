@@ -5,7 +5,7 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: '/V1-Grocery-bb-planner/',
+  base: '/v2-grocery-bb-planner/',
   build: {
     outDir: 'docs',
   },
