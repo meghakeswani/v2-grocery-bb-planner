@@ -15,6 +15,9 @@ export default function StatRings({ cartTotalValue, budgetTarget, cartTotalProte
   const budgetDashoffset = circumference - (budgetPercent / 100) * circumference;
   const proteinDashoffset = circumference - (proteinPercent / 100) * circumference;
 
+  const budgetLeft = budgetTarget - cartTotalValue;
+  const proteinLeft = Math.max(0, proteinTarget - cartTotalProtein);
+
   return (
     <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-2xs flex items-center justify-around h-full min-h-[140px]">
       
@@ -47,7 +50,9 @@ export default function StatRings({ cartTotalValue, budgetTarget, cartTotalProte
 
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
             <span className="text-[11px] font-bold text-gray-800">Budget</span>
-            <span className="text-[10px] text-gray-500 font-medium">₹{cartTotalValue}</span>
+            <span className="text-[10px] text-gray-500 font-medium">
+              {budgetLeft < 0 ? `-₹${Math.abs(budgetLeft)}` : `₹${budgetLeft}`}
+            </span>
           </div>
         </div>
         <span className="text-[10px] text-gray-400 font-medium">
@@ -85,7 +90,7 @@ export default function StatRings({ cartTotalValue, budgetTarget, cartTotalProte
 
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
             <span className="text-[11px] font-bold text-gray-800">Protein</span>
-            <span className="text-[10px] text-gray-500 font-medium">{cartTotalProtein}g</span>
+            <span className="text-[10px] text-gray-500 font-medium">{proteinLeft}g</span>
           </div>
         </div>
         <span className="text-[10px] text-gray-400 font-medium">
